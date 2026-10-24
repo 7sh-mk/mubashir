@@ -1,11 +1,11 @@
-# المصوّر الذكي — Smart Photo Booth
+# مباشر — Mubashir ID Photo
 
 A free, single-page web app that guides the user live (in Arabic) while they take an official Saudi Civil Affairs (الأحوال المدنية) ID photo, auto-captures when every requirement is met, removes the background, crops to size, and lets the user download a JPG ready to upload directly to Absher.
 
 ## Non-negotiables
 - **No server, no API keys, no paid services.** Everything runs in the browser. Hosted on GitHub Pages.
 - **Privacy:** the photo never leaves the device. No analytics, no uploads.
-- **Arabic-first, RTL**, mobile-first (front camera on a phone is the main use case).
+- **Arabic-first, RTL**, mobile-first. All UI text in formal Modern Standard Arabic (فصحى), never dialect (front camera on a phone is the main use case).
 - **No print feature.** Output is a single downloadable JPG.
 - Scope v1: Saudi Civil Affairs photos only (men and women).
 - Keep it simple: plain HTML/CSS/JS, no framework, no build step.
@@ -28,21 +28,21 @@ A free, single-page web app that guides the user live (in Arabic) while they tak
 ## Checks → detection → guidance message
 | Check | Detection | Arabic guidance |
 | --- | --- | --- |
-| Gaze not straight | iris landmarks / eyeLook* blendshapes | «طالع في الكاميرا مباشرة» |
-| Head turned / tilted | yaw, pitch, roll from the facial transformation matrix | «لف وجهك قليلًا يمين/يسار» / «عدّل ميلان راسك» |
-| Too far / too close | face height ratio in frame | «قرّب شوي» / «ابعد شوي» |
-| Off-center | face center vs frame center | «حرّك الجوال يمين/يسار/فوق/تحت» |
-| Eyes closed | eyeBlink blendshapes (or EAR) | «افتح عيونك» |
+| Gaze not straight | iris landmarks / eyeLook* blendshapes | «انظر إلى الكاميرا مباشرة» |
+| Head turned / tilted | yaw, pitch, roll from the facial transformation matrix | «أدر وجهك قليلًا إلى اليمين/اليسار» / «حافظ على استقامة رأسك» |
+| Too far / too close | face height ratio in frame | «اقترب قليلًا» / «ابتعد قليلًا» |
+| Off-center | face center vs frame center | «حرّك الجوال إلى اليمين/اليسار» / «ارفع/اخفض الجوال قليلًا» |
+| Eyes closed | eyeBlink blendshapes (or EAR) | «افتح عينيك» |
 | Mouth open | jawOpen / mouthClose blendshapes | «أغلق فمك» |
-| Overexposed | % of near-white pixels on face region | «الإضاءة قوية، ابعد عن مصدر النور» |
-| Too dark | mean face luminance | «المكان مظلم، قرّب من النور» |
-| Shadow on face | luminance difference left vs right half of face | «فيه ظل على الجهة …، واجه النور» |
-| Glasses | heuristic around eyes (edges/reflection); warn, don't block if unsure | «شيل النظارة» |
+| Overexposed | % of near-white pixels on face region | «الإضاءة قوية، ابتعد عن مصدر الضوء» |
+| Too dark | mean face luminance | «الإضاءة ضعيفة، اقترب من مصدر الضوء» |
+| Shadow on face | luminance difference left vs right half of face | «يوجد ظل على الجانب …، واجه مصدر الضوء» |
+| Glasses | heuristic around eyes (edges/reflection); warn, don't block if unsure | «انزع النظارة» |
 | Face covered (niqab) / features covered | missing/low-confidence nose & mouth landmarks | «اكشف الوجه كاملًا» |
 | Forehead covered (women) | distance from brows to top of head-cover vs face height | «ارفعي الحجاب عن جبهتك» |
 | Hair showing (women) | color band between forehead and hijab | «غطّي الشعر بالحجاب» |
-| No ghutra/shemagh (men) | segmentation/color above forehead | «البس الغترة أو الشماغ» |
-| Red eyes | red ratio inside iris on captured frame | «طفّ الفلاش» |
+| No ghutra/shemagh (men) | segmentation/color above forehead | «ارتدِ الغترة أو الشماغ» |
+| Red eyes | red ratio inside iris on captured frame | «أطفئ الفلاش» |
 | Contact lenses, makeup | not reliably detectable → show a checklist reminder before capture | — |
 
 Checks that can't be detected reliably must not block capture; show them as a pre-capture reminder instead. Auto-capture when all blocking checks pass for ~1 second continuously (stability window), then show a short countdown.
