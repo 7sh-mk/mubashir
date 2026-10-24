@@ -7,6 +7,7 @@ export const CONFIG = {
   wasmUrl: `${MP}/wasm`,
   faceModelUrl:
     "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+  modelCache: "mubashir-models-v1", // bump the version when a model URL changes
   segmenterModelUrl:
     "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite",
 
@@ -129,6 +130,8 @@ export const MSG = {
   ],
   tooBright: ["الإضاءة قوية، ابتعد عن مصدر الضوء", "الإضاءة قوية، ابتعدي عن مصدر الضوء"],
   ok: ["الوضعية صحيحة، اضغط «التقاط» عندما تكون مستعدًا", "الوضعية صحيحة، اضغطي «التقاط» عندما تكونين مستعدة"],
+  loadingPct: "جارٍ تحميل أدوات التحليل… %٪",
+  preparing: "جارٍ تجهيز فحص غطاء الرأس والخلفية…",
   processing: "جارٍ تجهيز الصورة…",
   ready: "الصورة جاهزة بمقاس 4×6 سم وخلفية بيضاء",
   processError: "تعذّر تجهيز الصورة، يُرجى إعادة التصوير",

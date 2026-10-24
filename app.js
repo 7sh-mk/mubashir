@@ -2,7 +2,6 @@ import { CONFIG, msg } from "./config.js";
 import { LM, analyzeHead, evaluate, headPose, gazeFrom } from "./checks.js";
 import { buildPhoto, toJpegBlob } from "./export.js";
 
-const { FaceLandmarker, ImageSegmenter, FilesetResolver } = await import(CONFIG.mediapipeUrl);
 
 const $ = (id) => document.getElementById(id);
 const video = $("video");
@@ -31,6 +30,7 @@ const sharpCtx = sharpCanvas.getContext("2d", { willReadFrequently: true });
 let gender = "m";
 let landmarker = null;
 let segmenter = null;
+let loadPct = 0; // download progress of the model being fetched, 0..100
 let lastVideoTime = -1;
 let analysed = 0;
 let smooth = null;
@@ -53,27 +53,78 @@ async function withFallback(create) {
   }
 }
 
+// Fetches a model file with progress, keeping a copy in the Cache API so later
+// visits load it instantly (the model hosts only allow an hour of HTTP caching).
+async function fetchModel(url, onProgress) {
+  let cache = null;
+  try {
+    cache = await caches.open(CONFIG.modelCache);
+    const hit = await cache.match(url);
+    if (hit) {
+      onProgress(100);
+      return new Uint8Array(await hit.arrayBuffer());
+    }
+  } catch {
+    cache = null; // Cache API unavailable (private mode, old browser): just download.
+  }
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("model download failed: " + res.status);
+  const total = Number(res.headers.get("content-length")) || 0;
+  const reader = res.body.getReader();
+  const chunks = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    received += value.length;
+    if (total) onProgress(Math.round((received / total) * 100));
+  }
+  const bytes = new Uint8Array(received);
+  let offset = 0;
+  for (const c of chunks) {
+    bytes.set(c, offset);
+    offset += c.length;
+  }
+  onProgress(100);
+  if (cache) cache.put(url, new Response(bytes.slice())).catch(() => {});
+  return bytes;
+}
+
+// Loads the face model first (guidance can start), then the segmenter in the
+// background (head-cover checks and the white background need it).
 async function loadModels() {
-  const fileset = await FilesetResolver.forVisionTasks(CONFIG.wasmUrl);
-  [landmarker, segmenter] = await Promise.all([
-    withFallback((delegate) =>
-      FaceLandmarker.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: CONFIG.faceModelUrl, delegate },
-        runningMode: "VIDEO",
-        numFaces: 1,
-        outputFaceBlendshapes: true,
-        outputFacialTransformationMatrixes: true,
-      }),
-    ),
-    withFallback((delegate) =>
-      ImageSegmenter.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: CONFIG.segmenterModelUrl, delegate },
-        runningMode: "VIDEO",
-        outputCategoryMask: true,
-        outputConfidenceMasks: true,
-      }),
-    ),
+  const progress = (pct) => {
+    loadPct = pct;
+    if (!startStatus.hidden) startStatus.textContent = msg("loadingPct", gender).replace("%", pct);
+  };
+  const [vision, faceBytes] = await Promise.all([
+    import(CONFIG.mediapipeUrl),
+    fetchModel(CONFIG.faceModelUrl, progress),
   ]);
+  const { FaceLandmarker, ImageSegmenter, FilesetResolver } = vision;
+  const fileset = await FilesetResolver.forVisionTasks(CONFIG.wasmUrl);
+  landmarker = await withFallback((delegate) =>
+    FaceLandmarker.createFromOptions(fileset, {
+      baseOptions: { modelAssetBuffer: faceBytes, delegate },
+      runningMode: "VIDEO",
+      numFaces: 1,
+      outputFaceBlendshapes: true,
+      outputFacialTransformationMatrixes: true,
+    }),
+  );
+  startStatus.hidden = true;
+
+  const segBytes = await fetchModel(CONFIG.segmenterModelUrl, (pct) => (loadPct = pct));
+  segmenter = await withFallback((delegate) =>
+    ImageSegmenter.createFromOptions(fileset, {
+      baseOptions: { modelAssetBuffer: segBytes, delegate },
+      runningMode: "VIDEO",
+      outputCategoryMask: true,
+      outputConfidenceMasks: true,
+    }),
+  );
 }
 
 async function startCamera() {
@@ -252,6 +303,7 @@ function ema(prev, next, a) {
 
 // Runs the segmenter and updates the smoothed head-cover ratios.
 function updateHead(face, now) {
+  if (!segmenter) return;
   const result = segmenter.segmentForVideo(video, now);
   try {
     const mask = result.categoryMask;
@@ -395,7 +447,10 @@ function loop() {
   const oval = guideOval(w, h);
   const now = performance.now();
 
-  if (video.readyState >= 2 && video.currentTime !== lastVideoTime) {
+  if (!landmarker) {
+    // Camera is on but the face model is still downloading.
+    setMessage(msg("loadingPct", gender).replace("%", loadPct), "warn");
+  } else if (video.readyState >= 2 && video.currentTime !== lastVideoTime) {
     lastVideoTime = video.currentTime;
     analysed++;
     const result = landmarker.detectForVideo(video, now);
@@ -404,7 +459,10 @@ function loop() {
     if (face) {
       smooth = ema(smooth, measure(face, result, w, h), CONFIG.smoothing);
       if (analysed % CONFIG.cover.everyNthFrame === 0) updateHead(face, now);
-      showMessage(evaluate(smooth, oval, head, gender, CONFIG), now);
+      let key = evaluate(smooth, oval, head, gender, CONFIG);
+      // Never allow capture before the head-cover checks have run at least once.
+      if (key === "ok" && !head) key = "preparing";
+      showMessage(key, now);
       if (!qualityWarned) trackSharpness(face, smooth, oval);
     } else {
       smooth = null;
@@ -507,15 +565,14 @@ function retake() {
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
-loadModels()
-  .then(() => {
-    startStatus.hidden = true;
-    genderBtns.forEach((b) => (b.disabled = false));
-  })
-  .catch((err) => {
-    console.error(err);
-    startStatus.textContent = msg("modelError");
-  });
+// Buttons work right away; the models keep downloading while the camera opens.
+genderBtns.forEach((b) => (b.disabled = false));
+loadModels().catch((err) => {
+  console.error(err);
+  startStatus.hidden = false;
+  startStatus.textContent = msg("modelError");
+  setMessage(msg("modelError"), "warn");
+});
 
 genderBtns.forEach((btn) =>
   btn.addEventListener("click", async () => {
