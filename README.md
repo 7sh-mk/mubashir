@@ -9,7 +9,7 @@
 أداة ويب مجانية توجّهك لحظيًا بالعربية أثناء التصوير، وتمنع الأخطاء قبل أن تقع،
 ثم تُخرج صورة 4×6 سم بخلفية بيضاء جاهزة للرفع في أبشر.
 
-[جرّب الأداة](LIVE_URL) · [إرشادات التصوير](LIVE_URL/guide.html) · [سياسة الخصوصية](LIVE_URL/policy.html)
+[جرّب الأداة](https://7sh-mk.github.io/mubashir/) · [إرشادات التصوير](https://7sh-mk.github.io/mubashir/guide.html) · [سياسة الخصوصية](https://7sh-mk.github.io/mubashir/policy.html)
 
 </div>
 
