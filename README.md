@@ -25,23 +25,27 @@
 - **الخصوصية:** الصورة لا تُحفظ ولا تُرفع، وكل المعالجة على جهاز المستخدم.
 - **باللغه العربية:** واجهة من اليمين إلى اليسار، ورسائل بصيغة المذكر أو المؤنث حسب الاختيار.
 
-## سير العمل
+<div dir="ltr">
+
+## Workflow
 
 ```mermaid
 flowchart TD
-    A[اختيار: رجل / امرأة] --> B[فتح الكاميرا الأمامية]
-    B --> C[Face Landmarker<br>478 نقطة للوجه + تعابير + وضعية الرأس]
-    B --> D[Image Segmenter<br>فصل الشعر والجلد والملابس والخلفية]
-    C --> E{الفحوصات}
+    A[Choose: man / woman] --> B[Open front camera]
+    B --> C[Face Landmarker<br>478 landmarks + blendshapes + head pose]
+    B --> D[Image Segmenter<br>hair, skin, clothes, background]
+    C --> E{Checks}
     D --> E
-    E -- خطأ --> F[رسالة توجيه واحدة<br>الأهم أولًا]
+    E -- issue found --> F[One guidance message<br>highest priority first]
     F --> B
-    E -- كل الشروط متحققة --> G[تفعيل زر «التقاط»]
-    G --> H[إزالة الخلفية وتحويلها للأبيض]
-    H --> I[قص 4×6 سم والرأس 75٪ من الارتفاع]
-    I --> J[تنظيف: تباين وحدّة دون تغيير الألوان]
-    J --> K[تنزيل JPG بدقة 472×709]
+    E -- all requirements met --> G[Enable Capture button]
+    G --> H[Remove background, replace with pure white]
+    H --> I[Crop to 4x6 cm, head = 75% of height]
+    I --> J[Clean-up: contrast and sharpness, colors kept]
+    J --> K[Download JPG, 472x709 px]
 ```
+
+</div>
 
 ## ما الذي يفحصه
 
@@ -62,30 +66,39 @@ flowchart TD
 (إضاءة متساوية، وظهور الوجه من الذقن إلى الجبهة مع حدّيه).
 ما لا يمكن كشفه آليًا (العدسات اللاصقة، مساحيق التجميل) يظهر تذكيرًا قبل التصوير.
 
-## التقنيات
+<div dir="ltr">
 
-| الأداة | الدور |
+## Tech stack
+
+| Tool | Role |
 | --- | --- |
-| [MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker) | نقاط الوجه، اتجاه النظر، زوايا الرأس |
-| [MediaPipe Image Segmenter](https://ai.google.dev/edge/mediapipe/solutions/vision/image_segmenter) (multiclass) | فصل الشعر والجلد والملابس والخلفية |
-| `getUserMedia` | الكاميرا الأمامية |
-| Canvas | قياس الإضاءة، تبييض الخلفية، القص، حفظ JPG |
-| HTML / CSS / JavaScript | صفحة ثابتة بلا إطار عمل ولا خطوة بناء |
+| [MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker) | Face landmarks, gaze direction, head pose |
+| [MediaPipe Image Segmenter](https://ai.google.dev/edge/mediapipe/solutions/vision/image_segmenter) (multiclass) | Separates hair, skin, clothes and background |
+| `getUserMedia` | Front camera access |
+| Canvas API | Lighting analysis, white background, crop, JPG export |
+| HTML / CSS / JavaScript | Static site, no framework, no build step |
+| GitHub Pages | Free hosting over HTTPS |
 
-## هيكل المشروع
+</div>
+
+<div dir="ltr">
+
+## Project structure
 
 ```
-index.html     واجهة التصوير
-guide.html     إرشادات التصوير للنساء والرجال
-policy.html    الخصوصية وشروط الاستخدام
-style.css      الهوية البصرية (فاتح وداكن)
-app.js         الكاميرا وحلقة التحليل والواجهة
-checks.js      الفحوصات (دوال نقية: أرقام تدخل، رسالة تخرج)
-config.js      كل الحدود والمقاسات والرسائل في مكان واحد
-export.js      إزالة الخلفية، القص، التنظيف، JPG
-favicon.svg    الشعار
-assets/        صور النماذج المقبولة
+index.html     Capture screen
+guide.html     Photo guidelines for women and men
+policy.html    Privacy policy and terms of use
+style.css      Visual identity (light and dark mode)
+app.js         Camera, analysis loop and UI
+checks.js      All checks as pure functions (numbers in, guidance key out)
+config.js      Every threshold, size and message in one place
+export.js      Background removal, crop, clean-up, JPG export
+favicon.svg    Logo
+assets/        Accepted sample photos
 ```
+
+</div>
 
 ## التشغيل محليًا
 
