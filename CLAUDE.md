@@ -1,6 +1,6 @@
 # مباشر — Mubashir ID Photo
 
-A free, single-page web app that guides the user live (in Arabic) while they take an official Saudi Civil Affairs (الأحوال المدنية) ID photo, auto-captures when every requirement is met, removes the background, crops to size, and lets the user download a JPG ready to upload directly to Absher.
+A free, single-page web app that guides the user live (in Arabic) while they take an official Saudi Civil Affairs (الأحوال المدنية) ID photo, lets the user capture with a button once every requirement is met, removes the background, crops to size, and lets the user download a JPG ready to upload directly to Absher.
 
 ## Non-negotiables
 - **No server, no API keys, no paid services.** Everything runs in the browser. Hosted on GitHub Pages.
@@ -28,7 +28,7 @@ A free, single-page web app that guides the user live (in Arabic) while they tak
 ## Checks → detection → guidance message
 | Check | Detection | Arabic guidance |
 | --- | --- | --- |
-| Gaze not straight | iris landmarks / eyeLook* blendshapes | «انظر إلى الكاميرا مباشرة» |
+| Gaze not straight | eyeLook* blendshapes (down gets more room: people look at the screen) | «انظر إلى الأمام نحو الكاميرا مباشرة» |
 | Head turned / tilted | yaw, pitch, roll from the facial transformation matrix | «أدر وجهك قليلًا إلى اليمين/اليسار» / «حافظ على استقامة رأسك» |
 | Too far / too close | face height ratio in frame | «اقترب قليلًا» / «ابتعد قليلًا» |
 | Off-center | face center vs frame center | «حرّك الجوال إلى اليمين/اليسار» / «ارفع/اخفض الجوال قليلًا» |
@@ -41,15 +41,21 @@ A free, single-page web app that guides the user live (in Arabic) while they tak
 | Face covered (niqab) / features covered | missing/low-confidence nose & mouth landmarks | «اكشف الوجه كاملًا» |
 | Forehead covered (women) | distance from brows to top of head-cover vs face height | «ارفعي الحجاب عن جبهتك» |
 | Hair showing (women) | color band between forehead and hijab | «غطّي الشعر بالحجاب» |
+| Ears showing (women) | skin beside the face at ear height | «غطّي أذنيكِ بالحجاب» |
+| Hijab not snug (women) | background or hair in a thin band against the face edge | «شدّي الحجاب حول الوجه» |
+| Neck showing (women; civil affairs requires hair and neck covered) | body skin under the chin | «غطّي الرقبة بالحجاب» |
+| Chin covered | skin just above the chin edge | «الحجاب يغطي الذقن، اكشفي الذقن كاملًا» |
+| Hands in the photo | body skin around head and shoulders, outside head and neck | «أبعدي يدك عن الصورة» |
+| Uneven light | brightness gap between the two cheeks | «يوجد ظل على الجانب الأيمن/الأيسر من وجهك…» |
 | No ghutra/shemagh (men) | segmentation/color above forehead | «ارتدِ الغترة أو الشماغ» |
 | Red eyes | red ratio inside iris on captured frame | «أطفئ الفلاش» |
 | Contact lenses, makeup | not reliably detectable → show a checklist reminder before capture | — |
 
-Checks that can't be detected reliably must not block capture; show them as a pre-capture reminder instead. Auto-capture when all blocking checks pass for ~1 second continuously (stability window), then show a short countdown.
+Checks that can't be detected reliably must not block capture; show them as a pre-capture reminder instead. No auto-capture: the «التقاط» button is enabled only while all blocking checks pass, and the user presses it when ready.
 
 ## User flow (3 steps)
 1. **Choose:** رجل / امرأة (changes the checks and wording), plus a short reminder card (glasses off, plain clothes, face the light).
-2. **Capture:** live camera with a face-shaped overlay guide, one guidance message at a time (highest priority first), progress indicator, auto-capture.
+2. **Capture:** live camera with a face-shaped overlay guide, one guidance message at a time (highest priority first), progress indicator, manual «التقاط» button (enabled only when all checks pass).
 3. **Result:** preview on white background at 4×6, buttons: **تنزيل الصورة** (JPG) and **إعادة التصوير**.
 
 ## Output
@@ -61,7 +67,9 @@ Checks that can't be detected reliably must not block capture; show them as a pr
 - Works in light and dark mode. Large touch targets.
 
 ## Files
-- `index.html`, `style.css`, `app.js` (camera + loop + UI), `checks.js` (all checks, pure functions), `config.js` (requirements and thresholds), `export.js` (segmentation, crop, JPG).
+- `index.html`, `style.css`, `app.js` (camera + loop + UI), `checks.js` (all checks, pure functions), `config.js` (requirements, thresholds and messages), `export.js` (segmentation, crop, JPG).
+- `guide.html` (photo rules for women then men, with a correct sample each), `policy.html` (privacy, terms, contact), `favicon.svg` (logo, also used in the header), `assets/` (sample images).
+- Append `?debug` to the URL to see the live numbers behind every check when tuning `config.js`.
 
 ## Workflow
 - Build in small steps and test each on a real phone (GitHub Pages or a local HTTPS tunnel, since the camera needs HTTPS).

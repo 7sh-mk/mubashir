@@ -1,0 +1,9 @@
+# Source guides used during development only (not ours to publish)
+*.pdf
+
+# Local tooling
+.claude/
+node_modules/
+_test/
+.DS_Store
+Thumbs.db

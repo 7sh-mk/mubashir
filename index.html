@@ -9,16 +9,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="top">
     <a class="brand" href="index.html">
-      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
-        <rect width="32" height="32" rx="9" fill="currentColor" opacity=".14"/>
-        <path d="M8 12V9a1 1 0 0 1 1-1h3M20 8h3a1 1 0 0 1 1 1v3M24 20v3a1 1 0 0 1-1 1h-3M12 24H9a1 1 0 0 1-1-1v-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <ellipse cx="16" cy="15.5" rx="4.2" ry="5.4" fill="none" stroke="currentColor" stroke-width="2"/>
-      </svg>
+      <img class="mark" src="favicon.svg" alt="" width="40" height="40">
       <span>
         <strong>مباشر</strong>
         <small>صورة شخصية بمواصفات الأحوال المدنية</small>
@@ -33,21 +30,46 @@
         <canvas id="overlay"></canvas>
 
         <div class="start" id="start">
-          <p>ضع وجهك داخل الإطار، وستظهر لك الإرشادات خطوة بخطوة</p>
-          <button id="startBtn" type="button" disabled>جارٍ التحميل…</button>
+          <h2 class="start-title">اختر نوع الصورة</h2>
+          <div class="gender">
+            <button type="button" data-gender="m" disabled>رجل</button>
+            <button type="button" data-gender="f" disabled>امرأة</button>
+          </div>
+          <p class="status" id="startStatus">جارٍ تحميل أدوات التحليل…</p>
+          <ul class="tips">
+            <li>انزع النظارة، وقف مقابل مصدر ضوء دون ظل.</li>
+            <li>للرجال: الغترة أو الشماغ دون تغطية الوجه.</li>
+            <li>للنساء: حجاب يغطي الشعر دون الجبهة.</li>
+          </ul>
+          <a class="tips-link" href="guide.html">عرض إرشادات التصوير كاملة</a>
           <p class="note">لا تُحفظ صورتك ولا تغادر جهازك</p>
+        </div>
+
+        <div class="quality" id="quality" role="alert" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+          <p><strong>جودة الكاميرا منخفضة</strong>قد لا تُقبل الصورة الناتجة. يُفضّل استخدام جهاز آخر بكاميرا أوضح، مثل الجوال.</p>
+          <button id="qualityClose" type="button" aria-label="إغلاق التنبيه">×</button>
+        </div>
+
+        <div class="preview" id="preview" hidden>
+          <img id="shot" alt="الصورة النهائية بخلفية بيضاء">
+          <div class="preview-actions">
+            <button id="downloadBtn" type="button">تنزيل الصورة</button>
+            <button id="retakeBtn" type="button" class="btn-secondary">إعادة التصوير</button>
+          </div>
         </div>
       </div>
 
       <p class="msg" id="msg" role="status" aria-live="polite">&nbsp;</p>
+      <button id="captureBtn" type="button" class="capture" hidden disabled>التقاط</button>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="footer-inner">
       <nav class="footer-links" aria-label="روابط">
+        <a href="guide.html">إرشادات التصوير</a>
         <a href="policy.html">سياسة الخصوصية والاستخدام</a>
-        <a href="policy.html#contact">تواصل معنا</a>
       </nav>
 
       <div class="social">
@@ -63,7 +85,7 @@
       </div>
 
       <p class="disclaimer">أداة مستقلة وغير تابعة لأبشر أو وكالة الأحوال المدنية أو أي جهة حكومية.</p>
-      <p class="copy">© 2026 مباشر. جميع الحقوق محفوظة.</p>
+      <p class="copy">© 2026 مباشر. جميع الحقوق محفوظة لشريفة الزبيدي.</p>
     </div>
   </footer>
 
