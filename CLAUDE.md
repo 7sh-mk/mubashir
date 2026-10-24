@@ -1,0 +1,68 @@
+# المصوّر الذكي — Smart Photo Booth
+
+A free, single-page web app that guides the user live (in Arabic) while they take an official Saudi Civil Affairs (الأحوال المدنية) ID photo, auto-captures when every requirement is met, removes the background, crops to size, and lets the user download a JPG ready to upload directly to Absher.
+
+## Non-negotiables
+- **No server, no API keys, no paid services.** Everything runs in the browser. Hosted on GitHub Pages.
+- **Privacy:** the photo never leaves the device. No analytics, no uploads.
+- **Arabic-first, RTL**, mobile-first (front camera on a phone is the main use case).
+- **No print feature.** Output is a single downloadable JPG.
+- Scope v1: Saudi Civil Affairs photos only (men and women).
+- Keep it simple: plain HTML/CSS/JS, no framework, no build step.
+
+## Stack
+- MediaPipe Tasks Vision (`@mediapipe/tasks-vision`, loaded from jsDelivr):
+  - **Face Landmarker** (478 landmarks, blendshapes, transformation matrix) for pose, gaze, eyes, mouth, distance.
+  - **Image Segmenter** (selfie / multiclass) for background removal and head-cover detection.
+- `getUserMedia` for the front camera, `<canvas>` for analysis, white background compositing, cropping, JPG export.
+- Optional: Web Speech API (`speechSynthesis`, ar-SA) to speak guidance.
+
+## Official requirements (source: Absher PDFs in the project "الأحوال")
+- Size **4×6 cm** (export at 300 DPI → 472×709 px), **white** background, **color**, **JPG/JPEG**, taken within the last 6 months.
+- Clear features, neutral expression, **mouth closed**, looking **straight** at the camera, **no tilt**.
+- No glasses. No red eyes. No strong/overexposed lighting. No shadows on face or background.
+- **Men:** ghutra or shemagh is required; it must not cover the basic facial features.
+- **Women:** hijab covers the hair (no hair showing), forehead not covered, face fully uncovered (no niqab), no makeup, no contact lenses.
+- Not specified by the source: head height, eye position, file size. Use ICAO-style defaults: head (chin to crown) ≈ 70–80% of photo height, face centered horizontally, eyes ≈ 55–60% from the bottom. Keep these in one config object so they're easy to change.
+
+## Checks → detection → guidance message
+| Check | Detection | Arabic guidance |
+| --- | --- | --- |
+| Gaze not straight | iris landmarks / eyeLook* blendshapes | «طالع في الكاميرا مباشرة» |
+| Head turned / tilted | yaw, pitch, roll from the facial transformation matrix | «لف وجهك قليلًا يمين/يسار» / «عدّل ميلان راسك» |
+| Too far / too close | face height ratio in frame | «قرّب شوي» / «ابعد شوي» |
+| Off-center | face center vs frame center | «حرّك الجوال يمين/يسار/فوق/تحت» |
+| Eyes closed | eyeBlink blendshapes (or EAR) | «افتح عيونك» |
+| Mouth open | jawOpen / mouthClose blendshapes | «أغلق فمك» |
+| Overexposed | % of near-white pixels on face region | «الإضاءة قوية، ابعد عن مصدر النور» |
+| Too dark | mean face luminance | «المكان مظلم، قرّب من النور» |
+| Shadow on face | luminance difference left vs right half of face | «فيه ظل على الجهة …، واجه النور» |
+| Glasses | heuristic around eyes (edges/reflection); warn, don't block if unsure | «شيل النظارة» |
+| Face covered (niqab) / features covered | missing/low-confidence nose & mouth landmarks | «اكشف الوجه كاملًا» |
+| Forehead covered (women) | distance from brows to top of head-cover vs face height | «ارفعي الحجاب عن جبهتك» |
+| Hair showing (women) | color band between forehead and hijab | «غطّي الشعر بالحجاب» |
+| No ghutra/shemagh (men) | segmentation/color above forehead | «البس الغترة أو الشماغ» |
+| Red eyes | red ratio inside iris on captured frame | «طفّ الفلاش» |
+| Contact lenses, makeup | not reliably detectable → show a checklist reminder before capture | — |
+
+Checks that can't be detected reliably must not block capture; show them as a pre-capture reminder instead. Auto-capture when all blocking checks pass for ~1 second continuously (stability window), then show a short countdown.
+
+## User flow (3 steps)
+1. **Choose:** رجل / امرأة (changes the checks and wording), plus a short reminder card (glasses off, plain clothes, face the light).
+2. **Capture:** live camera with a face-shaped overlay guide, one guidance message at a time (highest priority first), progress indicator, auto-capture.
+3. **Result:** preview on white background at 4×6, buttons: **تنزيل الصورة** (JPG) and **إعادة التصوير**.
+
+## Output
+- Composite the person onto pure white (#FFFFFF) using the segmentation mask with a soft feathered edge.
+- Crop so the head fits the ratios above; export 472×709 JPG (quality ~0.92). Filename: `sura-ahwal.jpg`.
+
+## Design
+- Calm, official, elegant. Not playful. Saudi-green accent, generous whitespace, clear typography (an Arabic web font such as IBM Plex Sans Arabic or Tajawal from Google Fonts).
+- Works in light and dark mode. Large touch targets.
+
+## Files
+- `index.html`, `style.css`, `app.js` (camera + loop + UI), `checks.js` (all checks, pure functions), `config.js` (requirements and thresholds), `export.js` (segmentation, crop, JPG).
+
+## Workflow
+- Build in small steps and test each on a real phone (GitHub Pages or a local HTTPS tunnel, since the camera needs HTTPS).
+- Tune thresholds in `config.js`, not inside the checks.

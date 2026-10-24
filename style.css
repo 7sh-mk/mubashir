@@ -1,0 +1,136 @@
+:root {
+  --green: #006c35;
+  --green-soft: #2fa36b;
+  --bg: #f7f7f5;
+  --fg: #1b1f1d;
+  --muted: #5d6662;
+  --card: #ffffff;
+  --warn: #b26b00;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101412;
+    --fg: #eef2f0;
+    --muted: #9aa5a0;
+    --card: #1a201d;
+    --warn: #f0b347;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.top {
+  padding: calc(12px + env(safe-area-inset-top)) 16px 8px;
+  text-align: center;
+}
+
+.top h1 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.sub {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0 16px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #000;
+}
+
+#video,
+#overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#video {
+  object-fit: cover;
+  transform: scaleX(-1); /* mirror, like a selfie */
+}
+
+.start {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px;
+  text-align: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.start p {
+  margin: 0;
+  max-width: 26ch;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.start[hidden] { display: none; }
+
+button {
+  min-height: 52px;
+  min-width: 180px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled { opacity: 0.6; cursor: default; }
+
+.bottom {
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+}
+
+.msg {
+  margin: 0;
+  min-height: 56px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--card);
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.5;
+  transition: color 0.2s;
+}
+
+.msg.ok { color: var(--green-soft); }
+.msg.warn { color: var(--warn); }
